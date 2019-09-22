@@ -120,6 +120,9 @@ where
 
     /// Sample `n_samples` lanes slicing along `axis` using the default RNG.
     ///
+    /// If `with_replacement` is `true`, each lane can only be sampled once.
+    /// If `with_replacement` is `false`, each lane can be sampled multiple times.
+    ///
     /// ***Panics*** when:
     /// - creation of the RNG fails;
     /// - `n_samples` is greater than the length of `axis` (if sampling without replacement);
@@ -162,6 +165,9 @@ where
         D: RemoveAxis;
 
     /// Sample `n_samples` lanes slicing along `axis` using the specified RNG `rng`.
+    ///
+    /// If `with_replacement` is `true`, each lane can only be sampled once.
+    /// If `with_replacement` is `false`, each lane can be sampled multiple times.
     ///
     /// ***Panics*** when:
     /// - creation of the RNG fails;
