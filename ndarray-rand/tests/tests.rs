@@ -17,7 +17,7 @@ fn test_dim() {
 
 #[test]
 #[should_panic]
-fn test_sampling_without_replacement_more_rows_than_the_rows_in_the_original_array_should_panic() {
+fn oversampling_without_replacement_should_panic() {
     let m = 5;
     let n = 5;
     let a = Array::random((m, n), Uniform::new(0., 2.));
@@ -25,8 +25,16 @@ fn test_sampling_without_replacement_more_rows_than_the_rows_in_the_original_arr
 }
 
 #[test]
+fn oversampling_with_replacement_is_fine() {
+    let m = 5;
+    let n = 5;
+    let a = Array::random((m, n), Uniform::new(0., 2.));
+    let _samples = a.sample_axis(Axis(0), m + 1, true);
+}
+
+#[test]
 #[should_panic]
-fn test_sampling_from_a_zero_length_axis_should_panic() {
+fn sampling_from_a_zero_length_axis_should_panic() {
     let n = 5;
     let a = Array::random((0, n), Uniform::new(0., 2.));
     let _samples = a.sample_axis(Axis(0), 1, false);
