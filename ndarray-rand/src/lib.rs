@@ -33,7 +33,7 @@ use crate::rand::distributions::Distribution;
 use crate::rand::rngs::SmallRng;
 use crate::rand::{thread_rng, Rng, SeedableRng};
 
-use ndarray::ShapeBuilder;
+use ndarray::{ShapeBuilder, Axis, Array, RemoveAxis};
 use ndarray::{ArrayBase, DataOwned, Dimension};
 
 /// [`rand`](https://docs.rs/rand/0.7), re-exported for convenience and version-compatibility.
@@ -59,9 +59,9 @@ pub mod rand_distr {
 /// low-quality random numbers, and reproducibility is not guaranteed. See its
 /// documentation for information. You can select a different RNG with
 /// [`.random_using()`](#tymethod.random_using).
-pub trait RandomExt<S, D>
+pub trait RandomExt<S, A, D>
 where
-    S: DataOwned,
+    S: DataOwned<Elem=A>,
     D: Dimension,
 {
     /// Create an array with shape `dim` with elements drawn from
@@ -116,11 +116,22 @@ where
         IdS: Distribution<S::Elem>,
         R: Rng + ?Sized,
         Sh: ShapeBuilder<Dim = D>;
+
+    fn sample_axis(&self, axis: Axis, n_samples: usize) -> Array<A, D>
+    where
+        A: Copy,
+        D: RemoveAxis;
+
+    fn sample_axis_using<R>(&self, axis: Axis, n_samples: usize, rng: &mut R) -> Array<A, D>
+        where
+            R: Rng + ?Sized,
+            A: Copy,
+            D: RemoveAxis;
 }
 
-impl<S, D> RandomExt<S, D> for ArrayBase<S, D>
+impl<S, A, D> RandomExt<S, A, D> for ArrayBase<S, D>
 where
-    S: DataOwned,
+    S: DataOwned<Elem=A>,
     D: Dimension,
 {
     fn random<Sh, IdS>(shape: Sh, dist: IdS) -> ArrayBase<S, D>
@@ -141,7 +152,28 @@ where
     {
         Self::from_shape_fn(shape, |_| dist.sample(rng))
     }
+
+    fn sample_axis(&self, axis: Axis, n_samples: usize) -> Array<A, D>
+    where
+        A: Copy,
+        D: RemoveAxis,
+    {
+        let mut rng =
+            SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed");
+        self.sample_axis_using(axis, n_samples, &mut rng)
+    }
+
+    fn sample_axis_using<R>(&self, axis: Axis, n_samples: usize, rng: &mut R) -> Array<A, D>
+    where
+        R: Rng + ?Sized,
+        A: Copy,
+        D: RemoveAxis
+    {
+        let indices = crate::rand::seq::index::sample(rng, self.len_of(axis), n_samples).into_vec();
+        self.select(Axis(0), &indices)
+    }
 }
+
 
 /// A wrapper type that allows casting f64 distributions to f32
 ///
