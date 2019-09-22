@@ -1,6 +1,7 @@
 use ndarray::{Array, Axis};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
+use quickcheck::quickcheck;
 
 #[test]
 fn test_dim() {
@@ -19,17 +20,22 @@ fn test_dim() {
 #[should_panic]
 fn oversampling_without_replacement_should_panic() {
     let m = 5;
-    let n = 5;
     let a = Array::random((m, n), Uniform::new(0., 2.));
     let _samples = a.sample_axis(Axis(0), m + 1, false);
 }
 
-#[test]
-fn oversampling_with_replacement_is_fine() {
-    let m = 5;
-    let n = 5;
-    let a = Array::random((m, n), Uniform::new(0., 2.));
-    let _samples = a.sample_axis(Axis(0), m + 1, true);
+quickcheck! {
+    fn oversampling_with_replacement_is_fine(m: usize, n: usize) -> bool {
+        // We don't want to deal with 0-length axis in this test
+        // `n` can be zero though
+        if m == 0 {
+            return true;
+        }
+
+        let a = Array::random((m, n), Uniform::new(0., 2.));
+        let _samples = a.sample_axis(Axis(0), m + 1, true);
+        true
+    }
 }
 
 #[test]
