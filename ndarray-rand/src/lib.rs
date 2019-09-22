@@ -132,25 +132,27 @@ where
     ///     [7., 8., 9.],
     ///     [10., 11., 12.],
     /// ];
-    /// let sample_rows = a.sample_axis(Axis(0), 2);
+    /// // Sample 2 rows, without replacement
+    /// let sample_rows = a.sample_axis(Axis(0), 2, false);
     /// println!("{:?}", sample_rows);
     /// // Example Output: (1st and 3rd rows)
     /// // [
     /// //  [1., 2., 3.],
     /// //  [7., 8., 9.]
     /// // ]
-    /// let sample_columns = a.sample_axis(Axis(1), 1);
+    /// // Sample 2 columns, with replacement
+    /// let sample_columns = a.sample_axis(Axis(1), 1, true);
     /// println!("{:?}", sample_columns);
-    /// // Example Output: (2nd column)
+    /// // Example Output: (2nd column, sampled twice)
     /// // [
-    /// //  [2.],
-    /// //  [5.],
-    /// //  [8.],
-    /// //  [11.]
+    /// //  [2., 2.],
+    /// //  [5., 5.],
+    /// //  [8., 8.],
+    /// //  [11., 11.]
     /// // ]
     /// # }
     /// ```
-    fn sample_axis(&self, axis: Axis, n_samples: usize) -> Array<A, D>
+    fn sample_axis(&self, axis: Axis, n_samples: usize, with_replacement: bool) -> Array<A, D>
     where
         A: Copy,
         D: RemoveAxis;
@@ -175,7 +177,7 @@ where
     ///     [10., 11., 12.],
     /// ];
     /// // Sample 2 rows, without replacement
-    /// let sample_rows = a.sample_axis_using(Axis(0), 2, &mut rng);
+    /// let sample_rows = a.sample_axis_using(Axis(0), 2, false, &mut rng);
     /// println!("{:?}", sample_rows);
     /// // Example Output: (1st and 3rd rows)
     /// // [
@@ -183,19 +185,19 @@ where
     /// //  [7., 8., 9.]
     /// // ]
     ///
-    /// // Sample 1 column
-    /// let sample_column = a.sample_axis_using(Axis(1), 1, &mut rng);
-    /// println!("{:?}", sample_column);
-    /// // Example Output: (2nd column)
+    /// // Sample 2 columns, with replacement
+    /// let sample_columns = a.sample_axis_using(Axis(1), 1, true, &mut rng);
+    /// println!("{:?}", sample_columns);
+    /// // Example Output: (2nd column, sampled twice)
     /// // [
-    /// //  [2.],
-    /// //  [5.],
-    /// //  [8.],
-    /// //  [11.]
+    /// //  [2., 2.],
+    /// //  [5., 5.],
+    /// //  [8., 8.],
+    /// //  [11., 11.]
     /// // ]
     /// # }
     /// ```
-    fn sample_axis_using<R>(&self, axis: Axis, n_samples: usize, rng: &mut R) -> Array<A, D>
+    fn sample_axis_using<R>(&self, axis: Axis, n_samples: usize, with_replacement: bool, rng: &mut R) -> Array<A, D>
         where
             R: Rng + ?Sized,
             A: Copy,
@@ -224,15 +226,15 @@ where
         Self::from_shape_fn(shape, |_| dist.sample(rng))
     }
 
-    fn sample_axis(&self, axis: Axis, n_samples: usize) -> Array<A, D>
+    fn sample_axis(&self, axis: Axis, n_samples: usize, with_replacement: bool) -> Array<A, D>
     where
         A: Copy,
         D: RemoveAxis,
     {
-        self.sample_axis_using(axis, n_samples, &mut get_rng())
+        self.sample_axis_using(axis, n_samples, with_replacement, &mut get_rng())
     }
 
-    fn sample_axis_using<R>(&self, axis: Axis, n_samples: usize, rng: &mut R) -> Array<A, D>
+    fn sample_axis_using<R>(&self, axis: Axis, n_samples: usize, with_replacement: bool, rng: &mut R) -> Array<A, D>
     where
         R: Rng + ?Sized,
         A: Copy,
