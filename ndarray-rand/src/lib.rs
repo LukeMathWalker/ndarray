@@ -117,11 +117,84 @@ where
         R: Rng + ?Sized,
         Sh: ShapeBuilder<Dim = D>;
 
+    /// Sample `n_samples` lanes slicing along `axis` using the default RNG.
+    ///
+    /// ***Panics*** if creation of the RNG fails.
+    ///
+    /// ```
+    /// use ndarray::{array, Axis};
+    /// use ndarray_rand::RandomExt;
+    ///
+    /// # fn main() {
+    /// let a = array![
+    ///     [1., 2., 3.],
+    ///     [4., 5., 6.],
+    ///     [7., 8., 9.],
+    ///     [10., 11., 12.],
+    /// ];
+    /// let sample_rows = a.sample_axis(Axis(0), 2);
+    /// println!("{:?}", sample_rows);
+    /// // Example Output: (1st and 3rd rows)
+    /// // [
+    /// //  [1., 2., 3.],
+    /// //  [7., 8., 9.]
+    /// // ]
+    /// let sample_columns = a.sample_axis(Axis(1), 1);
+    /// println!("{:?}", sample_columns);
+    /// // Example Output: (2nd column)
+    /// // [
+    /// //  [2.],
+    /// //  [5.],
+    /// //  [8.],
+    /// //  [11.]
+    /// // ]
+    /// # }
+    /// ```
     fn sample_axis(&self, axis: Axis, n_samples: usize) -> Array<A, D>
     where
         A: Copy,
         D: RemoveAxis;
 
+    /// Sample `n_samples` lanes slicing along `axis` using the specified RNG `rng`.
+    ///
+    /// ```
+    /// use ndarray::{array, Axis};
+    /// use ndarray_rand::RandomExt;
+    /// use ndarray_rand::rand::SeedableRng;
+    /// use rand_isaac::isaac64::Isaac64Rng;
+    ///
+    /// # fn main() {
+    /// // Get a seeded random number generator for reproducibility (Isaac64 algorithm)
+    /// let seed = 42;
+    /// let mut rng = Isaac64Rng::seed_from_u64(seed);
+    ///
+    /// let a = array![
+    ///     [1., 2., 3.],
+    ///     [4., 5., 6.],
+    ///     [7., 8., 9.],
+    ///     [10., 11., 12.],
+    /// ];
+    /// // Sample 2 rows, without replacement
+    /// let sample_rows = a.sample_axis_using(Axis(0), 2, &mut rng);
+    /// println!("{:?}", sample_rows);
+    /// // Example Output: (1st and 3rd rows)
+    /// // [
+    /// //  [1., 2., 3.],
+    /// //  [7., 8., 9.]
+    /// // ]
+    ///
+    /// // Sample 1 column
+    /// let sample_column = a.sample_axis_using(Axis(1), 1, &mut rng);
+    /// println!("{:?}", sample_column);
+    /// // Example Output: (2nd column)
+    /// // [
+    /// //  [2.],
+    /// //  [5.],
+    /// //  [8.],
+    /// //  [11.]
+    /// // ]
+    /// # }
+    /// ```
     fn sample_axis_using<R>(&self, axis: Axis, n_samples: usize, rng: &mut R) -> Array<A, D>
         where
             R: Rng + ?Sized,
