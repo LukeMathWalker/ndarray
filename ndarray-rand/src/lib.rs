@@ -139,9 +139,7 @@ where
         IdS: Distribution<S::Elem>,
         Sh: ShapeBuilder<Dim = D>,
     {
-        let mut rng =
-            SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed");
-        Self::random_using(shape, dist, &mut rng)
+        Self::random_using(shape, dist, &mut get_rng())
     }
 
     fn random_using<Sh, IdS, R>(shape: Sh, dist: IdS, rng: &mut R) -> ArrayBase<S, D>
@@ -158,9 +156,7 @@ where
         A: Copy,
         D: RemoveAxis,
     {
-        let mut rng =
-            SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed");
-        self.sample_axis_using(axis, n_samples, &mut rng)
+        self.sample_axis_using(axis, n_samples, &mut get_rng())
     }
 
     fn sample_axis_using<R>(&self, axis: Axis, n_samples: usize, rng: &mut R) -> Array<A, D>
@@ -174,6 +170,9 @@ where
     }
 }
 
+fn get_rng() -> SmallRng {
+    SmallRng::from_rng(thread_rng()).expect("create SmallRng from thread_rng failed")
+}
 
 /// A wrapper type that allows casting f64 distributions to f32
 ///
@@ -201,3 +200,4 @@ where
         self.0.sample(rng) as f32
     }
 }
+
