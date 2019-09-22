@@ -17,9 +17,17 @@ fn test_dim() {
 
 #[test]
 #[should_panic]
-fn test_you_cannot_sample_without_replacement_more_rows_than_the_rows_in_the_original_array() {
+fn test_sampling_without_replacement_more_rows_than_the_rows_in_the_original_array_should_panic() {
     let m = 5;
     let n = 5;
     let a = Array::random((m, n), Uniform::new(0., 2.));
-    let samples = a.sample_axis(Axis(0), m+1, false);
+    let _samples = a.sample_axis(Axis(0), m+1, false);
+}
+
+#[test]
+#[should_panic]
+fn test_sampling_from_a_zero_length_axis_should_panic() {
+    let n = 5;
+    let a = Array::random((0, n), Uniform::new(0., 2.));
+    let _samples = a.sample_axis(Axis(0), 1, false);
 }

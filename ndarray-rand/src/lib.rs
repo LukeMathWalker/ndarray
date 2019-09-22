@@ -119,7 +119,10 @@ where
 
     /// Sample `n_samples` lanes slicing along `axis` using the default RNG.
     ///
-    /// ***Panics*** if creation of the RNG fails.
+    /// ***Panics*** when:
+    /// - creation of the RNG fails;
+    /// - `n_samples` is greater than the length of `axis` (if sampling without replacement);
+    /// - length of `axis` is 0.
     ///
     /// ```
     /// use ndarray::{array, Axis};
@@ -158,6 +161,11 @@ where
         D: RemoveAxis;
 
     /// Sample `n_samples` lanes slicing along `axis` using the specified RNG `rng`.
+    ///
+    /// ***Panics*** when:
+    /// - creation of the RNG fails;
+    /// - `n_samples` is greater than the length of `axis` (if sampling without replacement);
+    /// - length of `axis` is 0.
     ///
     /// ```
     /// use ndarray::{array, Axis};
