@@ -33,7 +33,7 @@ use crate::rand::distributions::Distribution;
 use crate::rand::rngs::SmallRng;
 use crate::rand::{thread_rng, Rng, SeedableRng};
 
-use ndarray::{ShapeBuilder, Axis, Array, RemoveAxis};
+use ndarray::{Array, Axis, RemoveAxis, ShapeBuilder};
 use ndarray::{ArrayBase, DataOwned, Dimension};
 
 /// [`rand`](https://docs.rs/rand/0.7), re-exported for convenience and version-compatibility.
@@ -61,7 +61,7 @@ pub mod rand_distr {
 /// [`.random_using()`](#tymethod.random_using).
 pub trait RandomExt<S, A, D>
 where
-    S: DataOwned<Elem=A>,
+    S: DataOwned<Elem = A>,
     D: Dimension,
 {
     /// Create an array with shape `dim` with elements drawn from
@@ -205,16 +205,22 @@ where
     /// // ]
     /// # }
     /// ```
-    fn sample_axis_using<R>(&self, axis: Axis, n_samples: usize, with_replacement: bool, rng: &mut R) -> Array<A, D>
-        where
-            R: Rng + ?Sized,
-            A: Copy,
-            D: RemoveAxis;
+    fn sample_axis_using<R>(
+        &self,
+        axis: Axis,
+        n_samples: usize,
+        with_replacement: bool,
+        rng: &mut R,
+    ) -> Array<A, D>
+    where
+        R: Rng + ?Sized,
+        A: Copy,
+        D: RemoveAxis;
 }
 
 impl<S, A, D> RandomExt<S, A, D> for ArrayBase<S, D>
 where
-    S: DataOwned<Elem=A>,
+    S: DataOwned<Elem = A>,
     D: Dimension,
 {
     fn random<Sh, IdS>(shape: Sh, dist: IdS) -> ArrayBase<S, D>
@@ -242,11 +248,17 @@ where
         self.sample_axis_using(axis, n_samples, with_replacement, &mut get_rng())
     }
 
-    fn sample_axis_using<R>(&self, axis: Axis, n_samples: usize, with_replacement: bool, rng: &mut R) -> Array<A, D>
+    fn sample_axis_using<R>(
+        &self,
+        axis: Axis,
+        n_samples: usize,
+        with_replacement: bool,
+        rng: &mut R,
+    ) -> Array<A, D>
     where
         R: Rng + ?Sized,
         A: Copy,
-        D: RemoveAxis
+        D: RemoveAxis,
     {
         let indices = crate::rand::seq::index::sample(rng, self.len_of(axis), n_samples).into_vec();
         self.select(Axis(0), &indices)
@@ -283,4 +295,3 @@ where
         self.0.sample(rng) as f32
     }
 }
-

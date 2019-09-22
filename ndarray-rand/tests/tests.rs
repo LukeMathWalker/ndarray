@@ -21,7 +21,7 @@ fn test_sampling_without_replacement_more_rows_than_the_rows_in_the_original_arr
     let m = 5;
     let n = 5;
     let a = Array::random((m, n), Uniform::new(0., 2.));
-    let _samples = a.sample_axis(Axis(0), m+1, false);
+    let _samples = a.sample_axis(Axis(0), m + 1, false);
 }
 
 #[test]
