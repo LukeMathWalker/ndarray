@@ -20,7 +20,7 @@ fn test_dim() {
 #[should_panic]
 fn oversampling_without_replacement_should_panic() {
     let m = 5;
-    let a = Array::random((m, n), Uniform::new(0., 2.));
+    let a = Array::random((m, 4), Uniform::new(0., 2.));
     let _samples = a.sample_axis(Axis(0), m + 1, false);
 }
 
@@ -33,7 +33,7 @@ quickcheck! {
         }
 
         let a = Array::random((m, n), Uniform::new(0., 2.));
-        let _samples = a.sample_axis(Axis(0), m + 1, true);
+        let _samples = a.sample_axis(Axis(0), m + n + 1, true);
         true
     }
 }
