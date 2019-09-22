@@ -1,5 +1,6 @@
-use ndarray::{Array, Axis};
+use ndarray::{Array, Axis, Array2, ArrayView1};
 use ndarray_rand::rand_distr::Uniform;
+use ndarray_rand::rand::{thread_rng, distributions::Distribution};
 use ndarray_rand::RandomExt;
 use quickcheck::quickcheck;
 
@@ -32,16 +33,46 @@ quickcheck! {
             return true;
         }
 
+        let axis = Axis(0);
         let a = Array::random((m, n), Uniform::new(0., 2.));
-        let _samples = a.sample_axis(Axis(0), m + n + 1, true);
-        true
+        let samples = a.sample_axis(axis, m + n + 1, true);
+        samples.axis_iter(axis).all(|lane| is_subset(&a, &lane, axis))
     }
+}
+
+quickcheck! {
+    fn sampling_behaves_as_expected(m: usize, n: usize, with_replacement: bool) -> bool {
+        // We don't want to deal with 0-length axis in this test
+        // `n` can be zero though
+        if m == 0 {
+            return true;
+        }
+
+        let axis = Axis(0);
+        let a = Array::random((m, n), Uniform::new(0., 2.));
+        let n_samples = Uniform::from(1..m+1).sample(&mut thread_rng());
+        let samples = a.sample_axis(axis, n_samples, with_replacement);
+        samples.axis_iter(axis).all(|lane| is_subset(&a, &lane, axis))
+    }
+}
+
+// Check if, when sliced along `axis`, there is at least one lane in `a` equal to `b`
+fn is_subset(a: &Array2<f64>, b: &ArrayView1<f64>, axis: Axis) -> bool {
+    a.axis_iter(axis).any(|lane| &lane == b)
 }
 
 #[test]
 #[should_panic]
-fn sampling_from_a_zero_length_axis_should_panic() {
+fn sampling_without_replacement_from_a_zero_length_axis_should_panic() {
     let n = 5;
     let a = Array::random((0, n), Uniform::new(0., 2.));
     let _samples = a.sample_axis(Axis(0), 1, false);
+}
+
+#[test]
+#[should_panic]
+fn sampling_with_replacement_from_a_zero_length_axis_should_panic() {
+    let n = 5;
+    let a = Array::random((0, n), Uniform::new(0., 2.));
+    let _samples = a.sample_axis(Axis(0), 1, true);
 }
