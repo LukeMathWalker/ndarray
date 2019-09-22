@@ -29,8 +29,9 @@
 //! that the items are not compatible (e.g. that a type doesn't implement a
 //! necessary trait).
 
-use crate::rand::distributions::Distribution;
+use crate::rand::distributions::{Distribution, Uniform};
 use crate::rand::rngs::SmallRng;
+use crate::rand::seq::index::sample;
 use crate::rand::{thread_rng, Rng, SeedableRng};
 
 use ndarray::{Array, Axis, RemoveAxis, ShapeBuilder};
@@ -260,7 +261,12 @@ where
         A: Copy,
         D: RemoveAxis,
     {
-        let indices = crate::rand::seq::index::sample(rng, self.len_of(axis), n_samples).into_vec();
+        let indices: Vec<_> = if with_replacement {
+            let distribution = Uniform::from(0..self.len_of(axis));
+            (0..n_samples).map(|_| distribution.sample(rng)).collect()
+        } else {
+            sample(rng, self.len_of(axis), n_samples).into_vec()
+        };
         self.select(Axis(0), &indices)
     }
 }
