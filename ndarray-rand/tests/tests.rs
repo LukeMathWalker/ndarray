@@ -1,6 +1,6 @@
-use ndarray::{Array, Axis, Array2, ArrayView1};
+use ndarray::{Array, Array2, ArrayView1, Axis};
+use ndarray_rand::rand::{distributions::Distribution, thread_rng};
 use ndarray_rand::rand_distr::Uniform;
-use ndarray_rand::rand::{thread_rng, distributions::Distribution};
 use ndarray_rand::RandomExt;
 use quickcheck::quickcheck;
 
