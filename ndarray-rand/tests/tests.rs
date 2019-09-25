@@ -27,40 +27,58 @@ fn oversampling_without_replacement_should_panic() {
 
 quickcheck! {
     fn oversampling_with_replacement_is_fine(m: usize, n: usize) -> bool {
-        // We don't want to deal with 0-length axis in this test
-        // `n` can be zero though
-        if m == 0 {
-            return true;
+        let a = Array::random((m, n), Uniform::new(0., 2.));
+        // Higher than the length of both axes
+        let n_samples = m + n + 1;
+
+        // We don't want to deal with sampling from 0-length axes in this test
+        if m != 0 {
+            if !sampling_works(&a, true, Axis(0), n_samples) {
+                return false;
+            }
         }
 
-        let axis = Axis(0);
-        let a = Array::random((m, n), Uniform::new(0., 2.));
-        let samples = a.sample_axis(axis, m + n + 1, true);
-        samples.axis_iter(axis).all(|lane| is_subset(&a, &lane, axis))
+        // We don't want to deal with sampling from 0-length axes in this test
+        if n != 0 {
+            if !sampling_works(&a, true, Axis(1), n_samples) {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
 quickcheck! {
     fn sampling_behaves_as_expected(m: usize, n: usize, with_replacement: bool) -> bool {
-        // We don't want to deal with 0-length axes in this test
-        if m == 0 || n == 0 {
-            return true;
-        }
-
         let a = Array::random((m, n), Uniform::new(0., 2.));
         let mut rng = &mut thread_rng();
 
-        let n_row_samples = Uniform::from(1..m+1).sample(&mut rng);
-        let samples = a.sample_axis(Axis(0), n_row_samples, with_replacement);
-        let sampling_rows_works = samples.axis_iter(Axis(0)).all(|lane| is_subset(&a, &lane, Axis(0)));
+        // We don't want to deal with sampling from 0-length axes in this test
+        if m != 0 {
+            let n_row_samples = Uniform::from(1..m+1).sample(&mut rng);
+            if !sampling_works(&a, with_replacement, Axis(0), n_row_samples) {
+                return false;
+            }
+        }
 
-        let n_col_samples = Uniform::from(1..n+1).sample(&mut rng);
-        let samples = a.sample_axis(Axis(1), n_col_samples, with_replacement);
-        let sampling_cols_works = samples.axis_iter(Axis(1)).all(|lane| is_subset(&a, &lane, Axis(1)));
+        // We don't want to deal with sampling from 0-length axes in this test
+        if n != 0 {
+            let n_col_samples = Uniform::from(1..n+1).sample(&mut rng);
+            if !sampling_works(&a, with_replacement, Axis(1), n_col_samples) {
+                return false;
+            }
+        }
 
-        sampling_rows_works && sampling_cols_works
+        true
     }
 }
+
+fn sampling_works(a: &Array2<f64>, with_replacement: bool, axis: Axis, n_samples: usize) -> bool {
+    let samples = a.sample_axis(axis, n_samples, with_replacement);
+    samples.axis_iter(axis).all(|lane| is_subset(&a, &lane, axis))
+}
+
 
 // Check if, when sliced along `axis`, there is at least one lane in `a` equal to `b`
 fn is_subset(a: &Array2<f64>, b: &ArrayView1<f64>, axis: Axis) -> bool {
