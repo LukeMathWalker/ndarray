@@ -42,17 +42,23 @@ quickcheck! {
 
 quickcheck! {
     fn sampling_behaves_as_expected(m: usize, n: usize, with_replacement: bool) -> bool {
-        // We don't want to deal with 0-length axis in this test
-        // `n` can be zero though
-        if m == 0 {
+        // We don't want to deal with 0-length axes in this test
+        if m == 0 || n == 0 {
             return true;
         }
 
-        let axis = Axis(0);
         let a = Array::random((m, n), Uniform::new(0., 2.));
-        let n_samples = Uniform::from(1..m+1).sample(&mut thread_rng());
-        let samples = a.sample_axis(axis, n_samples, with_replacement);
-        samples.axis_iter(axis).all(|lane| is_subset(&a, &lane, axis))
+        let mut rng = &mut thread_rng();
+
+        let n_row_samples = Uniform::from(1..m+1).sample(&mut rng);
+        let samples = a.sample_axis(Axis(0), n_row_samples, with_replacement);
+        let sampling_rows_works = samples.axis_iter(Axis(0)).all(|lane| is_subset(&a, &lane, Axis(0)));
+
+        let n_col_samples = Uniform::from(1..n+1).sample(&mut rng);
+        let samples = a.sample_axis(Axis(1), n_col_samples, with_replacement);
+        let sampling_cols_works = samples.axis_iter(Axis(1)).all(|lane| is_subset(&a, &lane, Axis(1)));
+
+        sampling_rows_works && sampling_cols_works
     }
 }
 

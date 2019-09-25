@@ -23,7 +23,7 @@ features = ["small_rng"]
 
 [dev-dependencies]
 rand_isaac = "0.2.0"
-quickcheck = { version = "0.8", default-features = false }
+quickcheck = { version = "0.9", default-features = false }
 
 [package.metadata.release]
 no-dev-version = true

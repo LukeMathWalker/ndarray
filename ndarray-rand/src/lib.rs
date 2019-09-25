@@ -273,7 +273,7 @@ where
         } else {
             sample(rng, self.len_of(axis), n_samples).into_vec()
         };
-        self.select(Axis(0), &indices)
+        self.select(axis, &indices)
     }
 }
 
