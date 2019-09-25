@@ -76,9 +76,10 @@ quickcheck! {
 
 fn sampling_works(a: &Array2<f64>, with_replacement: bool, axis: Axis, n_samples: usize) -> bool {
     let samples = a.sample_axis(axis, n_samples, with_replacement);
-    samples.axis_iter(axis).all(|lane| is_subset(&a, &lane, axis))
+    samples
+        .axis_iter(axis)
+        .all(|lane| is_subset(&a, &lane, axis))
 }
-
 
 // Check if, when sliced along `axis`, there is at least one lane in `a` equal to `b`
 fn is_subset(a: &Array2<f64>, b: &ArrayView1<f64>, axis: Axis) -> bool {
