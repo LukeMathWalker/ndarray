@@ -1,7 +1,7 @@
 use ndarray::{Array, Array2, ArrayView1, Axis};
 use ndarray_rand::rand::{distributions::Distribution, thread_rng};
 use ndarray_rand::rand_distr::Uniform;
-use ndarray_rand::{RandomExt, SampleStrategy};
+use ndarray_rand::{RandomExt, SamplingStrategy};
 use quickcheck::quickcheck;
 
 #[test]
@@ -22,7 +22,7 @@ fn test_dim() {
 fn oversampling_without_replacement_should_panic() {
     let m = 5;
     let a = Array::random((m, 4), Uniform::new(0., 2.));
-    let _samples = a.sample_axis(Axis(0), m + 1, SampleStrategy::WithoutReplacement);
+    let _samples = a.sample_axis(Axis(0), m + 1, SamplingStrategy::WithoutReplacement);
 }
 
 quickcheck! {
@@ -33,14 +33,14 @@ quickcheck! {
 
         // We don't want to deal with sampling from 0-length axes in this test
         if m != 0 {
-            if !sampling_works(&a, SampleStrategy::WithReplacement, Axis(0), n_samples) {
+            if !sampling_works(&a, SamplingStrategy::WithReplacement, Axis(0), n_samples) {
                 return false;
             }
         }
 
         // We don't want to deal with sampling from 0-length axes in this test
         if n != 0 {
-            if !sampling_works(&a, SampleStrategy::WithReplacement, Axis(1), n_samples) {
+            if !sampling_works(&a, SamplingStrategy::WithReplacement, Axis(1), n_samples) {
                 return false;
             }
         }
@@ -50,7 +50,7 @@ quickcheck! {
 }
 
 quickcheck! {
-    fn sampling_behaves_as_expected(m: usize, n: usize, with_replacement: SampleStrategy) -> bool {
+    fn sampling_behaves_as_expected(m: usize, n: usize, strategy: SamplingStrategy) -> bool {
         let a = Array::random((m, n), Uniform::new(0., 2.));
         let mut rng = &mut thread_rng();
 
@@ -74,7 +74,7 @@ quickcheck! {
     }
 }
 
-fn sampling_works(a: &Array2<f64>, strategy: SampleStrategy, axis: Axis, n_samples: usize) -> bool {
+fn sampling_works(a: &Array2<f64>, strategy: SamplingStrategy, axis: Axis, n_samples: usize) -> bool {
     let samples = a.sample_axis(axis, n_samples, strategy);
     samples
         .axis_iter(axis)
@@ -91,7 +91,7 @@ fn is_subset(a: &Array2<f64>, b: &ArrayView1<f64>, axis: Axis) -> bool {
 fn sampling_without_replacement_from_a_zero_length_axis_should_panic() {
     let n = 5;
     let a = Array::random((0, n), Uniform::new(0., 2.));
-    let _samples = a.sample_axis(Axis(0), 1, SampleStrategy::WithoutReplacement);
+    let _samples = a.sample_axis(Axis(0), 1, SamplingStrategy::WithoutReplacement);
 }
 
 #[test]
@@ -99,5 +99,5 @@ fn sampling_without_replacement_from_a_zero_length_axis_should_panic() {
 fn sampling_with_replacement_from_a_zero_length_axis_should_panic() {
     let n = 5;
     let a = Array::random((0, n), Uniform::new(0., 2.));
-    let _samples = a.sample_axis(Axis(0), 1, SampleStrategy::WithReplacement);
+    let _samples = a.sample_axis(Axis(0), 1, SamplingStrategy::WithReplacement);
 }

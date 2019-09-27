@@ -130,7 +130,7 @@ where
     ///
     /// ```
     /// use ndarray::{array, Axis};
-    /// use ndarray_rand::{RandomExt, SampleStrategy};
+    /// use ndarray_rand::{RandomExt, SamplingStrategy};
     ///
     /// # fn main() {
     /// let a = array![
@@ -140,7 +140,7 @@ where
     ///     [10., 11., 12.],
     /// ];
     /// // Sample 2 rows, without replacement
-    /// let sample_rows = a.sample_axis(Axis(0), 2, SampleStrategy::WithoutReplacement);
+    /// let sample_rows = a.sample_axis(Axis(0), 2, SamplingStrategy::WithoutReplacement);
     /// println!("{:?}", sample_rows);
     /// // Example Output: (1st and 3rd rows)
     /// // [
@@ -148,7 +148,7 @@ where
     /// //  [7., 8., 9.]
     /// // ]
     /// // Sample 2 columns, with replacement
-    /// let sample_columns = a.sample_axis(Axis(1), 1, SampleStrategy::WithReplacement);
+    /// let sample_columns = a.sample_axis(Axis(1), 1, SamplingStrategy::WithReplacement);
     /// println!("{:?}", sample_columns);
     /// // Example Output: (2nd column, sampled twice)
     /// // [
@@ -159,7 +159,7 @@ where
     /// // ]
     /// # }
     /// ```
-    fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SampleStrategy) -> Array<A, D>
+    fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SamplingStrategy) -> Array<A, D>
     where
         A: Copy,
         D: RemoveAxis;
@@ -176,7 +176,7 @@ where
     ///
     /// ```
     /// use ndarray::{array, Axis};
-    /// use ndarray_rand::{RandomExt, SampleStrategy};
+    /// use ndarray_rand::{RandomExt, SamplingStrategy};
     /// use ndarray_rand::rand::SeedableRng;
     /// use rand_isaac::isaac64::Isaac64Rng;
     ///
@@ -192,7 +192,7 @@ where
     ///     [10., 11., 12.],
     /// ];
     /// // Sample 2 rows, without replacement
-    /// let sample_rows = a.sample_axis_using(Axis(0), 2, SampleStrategy::WithoutReplacement, &mut rng);
+    /// let sample_rows = a.sample_axis_using(Axis(0), 2, SamplingStrategy::WithoutReplacement, &mut rng);
     /// println!("{:?}", sample_rows);
     /// // Example Output: (1st and 3rd rows)
     /// // [
@@ -201,7 +201,7 @@ where
     /// // ]
     ///
     /// // Sample 2 columns, with replacement
-    /// let sample_columns = a.sample_axis_using(Axis(1), 1, SampleStrategy::WithReplacement, &mut rng);
+    /// let sample_columns = a.sample_axis_using(Axis(1), 1, SamplingStrategy::WithReplacement, &mut rng);
     /// println!("{:?}", sample_columns);
     /// // Example Output: (2nd column, sampled twice)
     /// // [
@@ -216,7 +216,7 @@ where
         &self,
         axis: Axis,
         n_samples: usize,
-        strategy: SampleStrategy,
+        strategy: SamplingStrategy,
         rng: &mut R,
     ) -> Array<A, D>
     where
@@ -247,7 +247,7 @@ where
         Self::from_shape_fn(shape, |_| dist.sample(rng))
     }
 
-    fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SampleStrategy) -> Array<A, D>
+    fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SamplingStrategy) -> Array<A, D>
     where
         A: Copy,
         D: RemoveAxis,
@@ -259,7 +259,7 @@ where
         &self,
         axis: Axis,
         n_samples: usize,
-        strategy: SampleStrategy,
+        strategy: SamplingStrategy,
         rng: &mut R,
     ) -> Array<A, D>
     where
@@ -268,11 +268,11 @@ where
         D: RemoveAxis,
     {
         let indices: Vec<_> = match strategy {
-            SampleStrategy::WithReplacement => {
+            SamplingStrategy::WithReplacement => {
                 let distribution = Uniform::from(0..self.len_of(axis));
                 (0..n_samples).map(|_| distribution.sample(rng)).collect()
             }
-            SampleStrategy::WithoutReplacement => {
+            SamplingStrategy::WithoutReplacement => {
                 index::sample(rng, self.len_of(axis), n_samples).into_vec()
             }
         };
@@ -280,7 +280,8 @@ where
     }
 }
 
-pub enum SampleStrategy {
+#[derive(Debug)]
+pub enum SamplingStrategy {
     WithReplacement,
     WithoutReplacement,
 }
