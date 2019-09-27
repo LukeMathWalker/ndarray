@@ -31,7 +31,7 @@
 
 use crate::rand::distributions::{Distribution, Uniform};
 use crate::rand::rngs::SmallRng;
-use crate::rand::seq::index::sample;
+use crate::rand::seq::index;
 use crate::rand::{thread_rng, Rng, SeedableRng};
 
 use ndarray::{Array, Axis, RemoveAxis, ShapeBuilder};
@@ -130,7 +130,7 @@ where
     ///
     /// ```
     /// use ndarray::{array, Axis};
-    /// use ndarray_rand::RandomExt;
+    /// use ndarray_rand::{RandomExt, SampleStrategy};
     ///
     /// # fn main() {
     /// let a = array![
@@ -140,7 +140,7 @@ where
     ///     [10., 11., 12.],
     /// ];
     /// // Sample 2 rows, without replacement
-    /// let sample_rows = a.sample_axis(Axis(0), 2, false);
+    /// let sample_rows = a.sample_axis(Axis(0), 2, SampleStrategy::WithoutReplacement);
     /// println!("{:?}", sample_rows);
     /// // Example Output: (1st and 3rd rows)
     /// // [
@@ -148,7 +148,7 @@ where
     /// //  [7., 8., 9.]
     /// // ]
     /// // Sample 2 columns, with replacement
-    /// let sample_columns = a.sample_axis(Axis(1), 1, true);
+    /// let sample_columns = a.sample_axis(Axis(1), 1, SampleStrategy::WithReplacement);
     /// println!("{:?}", sample_columns);
     /// // Example Output: (2nd column, sampled twice)
     /// // [
@@ -159,7 +159,7 @@ where
     /// // ]
     /// # }
     /// ```
-    fn sample_axis(&self, axis: Axis, n_samples: usize, with_replacement: bool) -> Array<A, D>
+    fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SampleStrategy) -> Array<A, D>
     where
         A: Copy,
         D: RemoveAxis;
@@ -176,7 +176,7 @@ where
     ///
     /// ```
     /// use ndarray::{array, Axis};
-    /// use ndarray_rand::RandomExt;
+    /// use ndarray_rand::{RandomExt, SampleStrategy};
     /// use ndarray_rand::rand::SeedableRng;
     /// use rand_isaac::isaac64::Isaac64Rng;
     ///
@@ -192,7 +192,7 @@ where
     ///     [10., 11., 12.],
     /// ];
     /// // Sample 2 rows, without replacement
-    /// let sample_rows = a.sample_axis_using(Axis(0), 2, false, &mut rng);
+    /// let sample_rows = a.sample_axis_using(Axis(0), 2, SampleStrategy::WithoutReplacement, &mut rng);
     /// println!("{:?}", sample_rows);
     /// // Example Output: (1st and 3rd rows)
     /// // [
@@ -201,7 +201,7 @@ where
     /// // ]
     ///
     /// // Sample 2 columns, with replacement
-    /// let sample_columns = a.sample_axis_using(Axis(1), 1, true, &mut rng);
+    /// let sample_columns = a.sample_axis_using(Axis(1), 1, SampleStrategy::WithReplacement, &mut rng);
     /// println!("{:?}", sample_columns);
     /// // Example Output: (2nd column, sampled twice)
     /// // [
@@ -216,7 +216,7 @@ where
         &self,
         axis: Axis,
         n_samples: usize,
-        with_replacement: bool,
+        strategy: SampleStrategy,
         rng: &mut R,
     ) -> Array<A, D>
     where
@@ -247,19 +247,19 @@ where
         Self::from_shape_fn(shape, |_| dist.sample(rng))
     }
 
-    fn sample_axis(&self, axis: Axis, n_samples: usize, with_replacement: bool) -> Array<A, D>
+    fn sample_axis(&self, axis: Axis, n_samples: usize, strategy: SampleStrategy) -> Array<A, D>
     where
         A: Copy,
         D: RemoveAxis,
     {
-        self.sample_axis_using(axis, n_samples, with_replacement, &mut get_rng())
+        self.sample_axis_using(axis, n_samples, strategy, &mut get_rng())
     }
 
     fn sample_axis_using<R>(
         &self,
         axis: Axis,
         n_samples: usize,
-        with_replacement: bool,
+        strategy: SampleStrategy,
         rng: &mut R,
     ) -> Array<A, D>
     where
@@ -267,14 +267,22 @@ where
         A: Copy,
         D: RemoveAxis,
     {
-        let indices: Vec<_> = if with_replacement {
-            let distribution = Uniform::from(0..self.len_of(axis));
-            (0..n_samples).map(|_| distribution.sample(rng)).collect()
-        } else {
-            sample(rng, self.len_of(axis), n_samples).into_vec()
+        let indices: Vec<_> = match strategy {
+            SampleStrategy::WithReplacement => {
+                let distribution = Uniform::from(0..self.len_of(axis));
+                (0..n_samples).map(|_| distribution.sample(rng)).collect()
+            }
+            SampleStrategy::WithoutReplacement => {
+                index::sample(rng, self.len_of(axis), n_samples).into_vec()
+            }
         };
         self.select(axis, &indices)
     }
+}
+
+pub enum SampleStrategy {
+    WithReplacement,
+    WithoutReplacement,
 }
 
 fn get_rng() -> SmallRng {
