@@ -36,6 +36,8 @@ use crate::rand::{thread_rng, Rng, SeedableRng};
 
 use ndarray::{Array, Axis, RemoveAxis, ShapeBuilder};
 use ndarray::{ArrayBase, DataOwned, Dimension};
+#[cfg(test)]
+use quickcheck::{Arbitrary, Gen};
 
 /// [`rand`](https://docs.rs/rand/0.7), re-exported for convenience and version-compatibility.
 pub mod rand {
@@ -120,8 +122,8 @@ where
 
     /// Sample `n_samples` lanes slicing along `axis` using the default RNG.
     ///
-    /// If `with_replacement` is `true`, each lane can only be sampled once.
-    /// If `with_replacement` is `false`, each lane can be sampled multiple times.
+    /// If `strategy==SamplingStrategy::WithoutReplacement`, each lane can only be sampled once.
+    /// If `strategy==SamplingStrategy::WithReplacement`, each lane can be sampled multiple times.
     ///
     /// ***Panics*** when:
     /// - creation of the RNG fails;
@@ -166,8 +168,8 @@ where
 
     /// Sample `n_samples` lanes slicing along `axis` using the specified RNG `rng`.
     ///
-    /// If `with_replacement` is `true`, each lane can only be sampled once.
-    /// If `with_replacement` is `false`, each lane can be sampled multiple times.
+    /// If `strategy==SamplingStrategy::WithoutReplacement`, each lane can only be sampled once.
+    /// If `strategy==SamplingStrategy::WithReplacement`, each lane can be sampled multiple times.
     ///
     /// ***Panics*** when:
     /// - creation of the RNG fails;
@@ -280,10 +282,28 @@ where
     }
 }
 
-#[derive(Debug)]
+/// Used as parameter in [`sample_axis`] and [`sample_axis_using`] to determine
+/// if lanes from the original array should only be sampled once (*without replacement*) or
+/// multiple times (*with replacement*).
+///
+/// [`sample_axis`]: trait.RandomExt.html#tymethod.sample_axis
+/// [`sample_axis_using`]: trait.RandomExt.html#tymethod.sample_axis_using
+#[derive(Debug, Clone)]
 pub enum SamplingStrategy {
     WithReplacement,
     WithoutReplacement,
+}
+
+#[cfg(test)]
+// Implement `Arbitrary` to get input generation from `quickcheck` for `SamplingStrategy`
+impl Arbitrary for SamplingStrategy {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        if g.gen_bool(0.5) {
+            SamplingStrategy::WithReplacement
+        } else {
+            SamplingStrategy::WithoutReplacement
+        }
+    }
 }
 
 fn get_rng() -> SmallRng {
