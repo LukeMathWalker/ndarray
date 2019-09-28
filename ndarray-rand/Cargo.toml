@@ -26,9 +26,6 @@ features = ["small_rng"]
 rand_isaac = "0.2.0"
 quickcheck = { version = "0.9", default-features = false }
 
-[features]
-quickcheck = ["quickcheck"]
-
 [package.metadata.release]
 no-dev-version = true
 tag-name = "ndarray-rand-{{version}}"
