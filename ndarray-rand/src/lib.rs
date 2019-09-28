@@ -36,7 +36,7 @@ use crate::rand::{thread_rng, Rng, SeedableRng};
 
 use ndarray::{Array, Axis, RemoveAxis, ShapeBuilder};
 use ndarray::{ArrayBase, DataOwned, Dimension};
-#[cfg(test)]
+#[cfg(feature = "quickcheck")]
 use quickcheck::{Arbitrary, Gen};
 
 /// [`rand`](https://docs.rs/rand/0.7), re-exported for convenience and version-compatibility.
@@ -294,8 +294,8 @@ pub enum SamplingStrategy {
     WithoutReplacement,
 }
 
-#[cfg(test)]
-// Implement `Arbitrary` to get input generation from `quickcheck` for `SamplingStrategy`
+// `Arbitrary` enables `quickcheck` to generate random `SamplingStrategy` values for testing.
+#[cfg(feature = "quickcheck")]
 impl Arbitrary for SamplingStrategy {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
         if g.gen_bool(0.5) {

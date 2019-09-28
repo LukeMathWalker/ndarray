@@ -1,8 +1,9 @@
 use ndarray::{Array, Array2, ArrayView1, Axis};
-use ndarray_rand::rand::{distributions::Distribution, thread_rng};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::{RandomExt, SamplingStrategy};
 use quickcheck::quickcheck;
+#[cfg(feature = "quickcheck")]
+use ndarray_rand::rand::{distributions::Distribution, thread_rng};
 
 #[test]
 fn test_dim() {
@@ -49,6 +50,7 @@ quickcheck! {
     }
 }
 
+#[cfg(feature = "quickcheck")]
 quickcheck! {
     fn sampling_behaves_as_expected(m: usize, n: usize, strategy: SamplingStrategy) -> bool {
         let a = Array::random((m, n), Uniform::new(0., 2.));
@@ -57,7 +59,7 @@ quickcheck! {
         // We don't want to deal with sampling from 0-length axes in this test
         if m != 0 {
             let n_row_samples = Uniform::from(1..m+1).sample(&mut rng);
-            if !sampling_works(&a, strategy, Axis(0), n_row_samples) {
+            if !sampling_works(&a, strategy.clone(), Axis(0), n_row_samples) {
                 return false;
             }
         }
