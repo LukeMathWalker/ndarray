@@ -1,9 +1,9 @@
 use ndarray::{Array, Array2, ArrayView1, Axis};
+#[cfg(feature = "quickcheck")]
+use ndarray_rand::rand::{distributions::Distribution, thread_rng};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::{RandomExt, SamplingStrategy};
 use quickcheck::quickcheck;
-#[cfg(feature = "quickcheck")]
-use ndarray_rand::rand::{distributions::Distribution, thread_rng};
 
 #[test]
 fn test_dim() {
@@ -76,7 +76,12 @@ quickcheck! {
     }
 }
 
-fn sampling_works(a: &Array2<f64>, strategy: SamplingStrategy, axis: Axis, n_samples: usize) -> bool {
+fn sampling_works(
+    a: &Array2<f64>,
+    strategy: SamplingStrategy,
+    axis: Axis,
+    n_samples: usize,
+) -> bool {
     let samples = a.sample_axis(axis, n_samples, strategy);
     samples
         .axis_iter(axis)
